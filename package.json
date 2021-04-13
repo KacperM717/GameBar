@@ -6,7 +6,13 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch-nodemon": "nodemon dist",
-    "watch-ts": "npx tsc -w"
+    "watch-ts": "npx tsc -w",
+    "dev": "concurrently \"npm:watch-*\""
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
   },
   "repository": {
     "type": "git",
