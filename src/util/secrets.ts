@@ -4,9 +4,8 @@ dotenv.config({ path: '.env' });
 
 const production = process.env.ENV_MODE === 'prod';
 
-export const DB_URI = production
-  ? process.env.DB_PROD_URI
-  : process.env.DB_URI;
+export const DB_URI =
+  (production ? process.env.DB_PROD_URI : process.env.DB_URI) ?? '';
 
 if (!DB_URI) {
   console.error('DB connection string not found');
