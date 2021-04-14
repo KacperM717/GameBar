@@ -11,7 +11,12 @@
   },
   "plugins": ["@typescript-eslint"],
   "rules": {
-    "no-console": "warn",
-    "no-var": "error"
+    "no-var": "error",
+    "prettier/prettier": [
+      "error",
+      {
+        "endOfLine": "auto"
+      }
+    ]
   }
 }
