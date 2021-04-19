@@ -1,6 +1,7 @@
 import { IAuthService, Req, Res } from '../types';
 import { AuthService } from '../services/auth.service';
 import { NextFunction } from 'express';
+import { HOST } from '../config';
 
 export class AuthController {
   authService: IAuthService;
@@ -41,8 +42,12 @@ export class AuthController {
     };
     try {
       const { _id, token } = await this.authService.LogIn(logInData);
-      res.cookie('token', token, { httpOnly: true });
-      res.set('Authorization', `Bearer: ${token}`);
+      res.cookie('token', token, {
+        maxAge: 86_400_000,
+        sameSite: 'lax',
+        domain: HOST.replace(/^https?:\/\//, ''),
+        httpOnly: true,
+      });
       res.json({
         message: 'Logged successfully',
         body: { _id, token },
@@ -57,7 +62,13 @@ export class AuthController {
   };
 
   postLogOut = (req: Req, res: Res) => {
-    res.json({ deleteToken: true });
+    res.cookie('token', '', {
+      maxAge: -1,
+      sameSite: 'lax',
+      domain: HOST.replace(/^https?:\/\//, ''),
+      httpOnly: true,
+    });
+    res.json({ message: "Oh farewell... Hope it won't last long" });
   };
 
   getActivate = async (req: Req, res: Res, next: NextFunction) => {
