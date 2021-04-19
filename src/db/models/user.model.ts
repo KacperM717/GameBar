@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
-import { IUser } from '../types';
+import { IUser } from '../../types';
 
 export const UserSchema = new mongoose.Schema(
   {
-    username: {
+    name: {
       type: String,
       unique: true,
       required: [true, 'Username is required'],
@@ -26,17 +26,16 @@ export const UserSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-UserSchema.statics.findByLogin = async function (login: string) {
-  let user = await this.findOne({ username: login });
-  if (!user) {
-    user = await this.findOne({ email: login });
-  }
-  return user;
-};
+UserSchema.pre('save', function () {});
 
-UserSchema.pre('remove', function (next) {
-  this.model('Message').deleteMany({ user: this._id }, {}, next);
-});
+UserSchema.static(
+  'findExisting',
+  async function (name: string, email: string) {
+    return await this.findOne({
+      $or: [{ name: name }, { email: email }],
+    });
+  },
+);
 
 const User = mongoose.model<IUser & mongoose.Document>(
   'User',

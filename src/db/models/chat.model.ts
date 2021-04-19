@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import { IChat } from '../types.js';
-import { MessageSchema } from './Message';
+import { IChat } from '../../types.js';
+import { MessageSchema } from './message.model';
 
 export const ChatSchema = new mongoose.Schema({
   name: String,

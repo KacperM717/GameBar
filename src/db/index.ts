@@ -1,10 +1,10 @@
 import { Db } from 'mongodb';
 import mongoose from 'mongoose';
-import { DB_URI } from '../util/secrets';
-import Chat from './models/Chat';
-import Friends from './models/Friends';
-import Message from './models/Message';
-import User from './models/User';
+import { DB_URI } from '../config';
+import Chat from './models/chat.model';
+import Friends from './models/friends.model';
+import Message from './models/message.model';
+import User from './models/user.model';
 
 export const models = {
   User,
@@ -13,7 +13,7 @@ export const models = {
   Chat,
 };
 
-export default async (): Promise<Db> => {
+export const connectDB = async (): Promise<Db> => {
   const connection = await mongoose.connect(DB_URI, {
     useNewUrlParser: true,
     useCreateIndex: true,

@@ -1,16 +1,19 @@
-import './util/secrets';
+import { PORT } from './config';
 import http from 'http';
 import app from './app';
+import { connectDB } from './db';
 
-if (process.env.ENV_MODE === 'dev') {
-  console.log('In development mode');
-}
+(async () => {
+  if (process.env.ENV_MODE === 'dev') {
+    console.log('In development mode');
+  }
 
-// Passing express to http - makes it available for socket.io and https in future
-const server = http.createServer(app);
+  // Connect to DB
+  const db = await connectDB();
+  console.log(`DB Connected to: ${db.databaseName}`);
 
-server.listen(app.get('port'), () => {
-  console.log(`App is running on port ${app.get('port')}`);
-});
+  // Passing express to http - makes it available for socket.io and https in future
+  const server = http.createServer(app);
 
-export default server;
+  server.listen(PORT, () => console.log(`HTTP running: ${PORT}`));
+})();
