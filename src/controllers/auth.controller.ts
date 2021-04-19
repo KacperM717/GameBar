@@ -20,10 +20,11 @@ export class AuthController {
       password: req.body.password,
     };
     try {
-      const { name, email } = await this.authService.SignUp(
-        signUpData,
-      );
-      res.json({ name, email });
+      const user = await this.authService.SignUp(signUpData);
+      res.json({
+        message: 'Account created successfully',
+        body: { user },
+      });
     } catch (error) {
       next(error);
     }
@@ -39,10 +40,13 @@ export class AuthController {
       password: req.body.password,
     };
     try {
-      const token = await this.authService.LogIn(logInData);
+      const { _id, token } = await this.authService.LogIn(logInData);
       res.cookie('token', token, { httpOnly: true });
       res.set('Authorization', `Bearer: ${token}`);
-      res.json({ message: 'Logged successfully', token: token });
+      res.json({
+        message: 'Logged successfully',
+        body: { _id, token },
+      });
     } catch (error) {
       next(error);
     }

@@ -3,20 +3,22 @@ import { Req, Res } from '../types';
 import { NextFunction } from 'express';
 
 const validate = (req: Req, res: Res, next: NextFunction) => {
-  const errors = validationResult(req).array();
-  if (errors.length > 0)
-    return res.status(400).json({ error: errors[0] });
+  const errors = validationResult(req)
+    .array()
+    .map(({ msg, param, location }) => ({ msg, param, location }));
+  if (errors.length > 0) return res.status(400).json(errors);
   next();
 };
 
 export const isLogInValid = () => [
-  check('email', 'Must be valid email address')
+  check('email', 'Email address is incorrect')
     .isEmail()
     .normalizeEmail()
     .trim(),
-  check('password', 'Password must containt at least 8 characters')
-    .notEmpty()
-    .isLength({ min: 8, max: 100 }),
+  check('password', 'Password is incorrect').isLength({
+    min: 8,
+    max: 100,
+  }),
   validate,
 ];
 
@@ -29,9 +31,10 @@ export const isSignUpValid = () => [
     .isEmail()
     .normalizeEmail()
     .trim(),
-  check('password', 'Password must contain at least 8 characters')
-    .notEmpty()
-    .isLength({ min: 8, max: 100 }),
+  check(
+    'password',
+    'Password must contain at least 8 characters',
+  ).isLength({ min: 8, max: 100 }),
   validate,
 ];
 
