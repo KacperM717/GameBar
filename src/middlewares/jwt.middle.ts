@@ -6,10 +6,13 @@ type TokenGetters = {
 };
 
 const tokenGetters: TokenGetters = {
-  fromHeaderOrCookie: (req: Request) =>
-    req.headers.authorization
+  fromHeaderOrCookie: (req: Request) => {
+    console.log(req.headers.authorization);
+    console.log(req.cookies);
+    return req.headers.authorization
       ? req.headers.authorization?.split(' ')[1]
-      : req.cookies?.token,
+      : req.cookies?.token;
+  },
 };
 
 interface IJWTOptions {

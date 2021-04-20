@@ -11,7 +11,7 @@ const logger = {
     ]);
     console.groupEnd();
     console.group('Headers');
-    console.table(req.headers);
+    console.table({ ...req.headers, cookie: '****' });
     console.groupEnd();
     console.groupEnd();
     console.timeEnd('Logging time: ');

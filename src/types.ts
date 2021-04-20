@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 
 // Express Types
 export interface Req extends Request {
@@ -16,7 +17,6 @@ export interface ITimestamp {
 }
 
 export interface IUser extends ITimestamp {
-  _id: string;
   name: string;
   email: string;
   password: string;
@@ -24,26 +24,31 @@ export interface IUser extends ITimestamp {
   active: boolean;
 }
 
+export interface UserDoc extends IUser, mongoose.Document {}
+
 export interface IMessage extends ITimestamp {
-  _id: string;
   text: string;
   author: string;
   reactions?: any;
 }
 
+export interface MessageDoc extends IMessage, mongoose.Document {}
+
 export interface IChat {
-  _id: string;
   name: string;
-  members: IUser['_id'][];
-  messages: IMessage[];
+  members: UserDoc['_id'][];
+  messages: MessageDoc[];
 }
 
+export interface ChatDoc extends IChat, mongoose.Document {}
+
 export interface IFriends {
-  _id: string;
-  pending: IUser['_id'][];
-  friends: IUser['_id'][];
-  blocked: IUser['_id'][];
+  pending: UserDoc['_id'][];
+  friends: UserDoc['_id'][];
+  blocked: UserDoc['_id'][];
 }
+
+export interface FriendsDoc extends IFriends, mongoose.Document {}
 
 // Email Types
 export interface IEmailData {
@@ -72,7 +77,7 @@ export interface IUserLogIn {
 }
 
 // DTOs
-export type UserDTO = Pick<IUser, '_id' | 'email' | 'name'>;
+export type UserDTO = Pick<UserDoc, '_id' | 'email' | 'name'>;
 export type TokenDTO = {
   _id: string;
   token: string;
@@ -84,4 +89,23 @@ export interface IAuthService {
   LogIn: (data: IUserLogIn) => Promise<TokenDTO>;
   LogOut: () => void;
   Activate: (token: string) => void;
+}
+
+export interface IFriendService {
+  SendRequest: (userId: string, targetId: string) => void;
+  AcceptRequest: (userId: string, targetId: string) => void;
+  Block: (userId: string, targetId: string) => void;
+  RemoveFriend: (userId: string, targetId: string) => void;
+  createFriendList: (user: UserDoc) => Promise<FriendsDoc>;
+  getFriendList: (userId: string) => Promise<FriendsDoc>;
+}
+
+// Controllers
+export interface IFriendController {
+  friendService: IFriendService;
+  postAdd: any;
+  postAccept: any;
+  postBlock: any;
+  postRemove: any;
+  getFriendList: any;
 }

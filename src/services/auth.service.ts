@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { HOST, JWT_SECRET, PORT, SALT } from '../config';
 import { IAuthService } from '../types';
 import emailer from './mail.service';
+import { FriendService } from './friend.service';
 
 // Static service - no need to implement as a class?
 export const AuthService: IAuthService = {
@@ -40,7 +41,13 @@ export const AuthService: IAuthService = {
       throw new Error('DB failed creating user');
     }
 
-    return { _id: user._id, name: user.name, email: user.email };
+    await FriendService.createFriendList(user);
+
+    return {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+    };
   },
 
   LogIn: async ({ email, password }) => {
