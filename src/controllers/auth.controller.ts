@@ -11,7 +11,7 @@ export class AuthController {
   }
 
   getSignUp = (req: Req, res: Res) => {
-    res.json({ message: 'You are signing up' });
+    res.json({ msg: 'You are signing up' });
   };
 
   postSignUp = async (req: Req, res: Res, next: NextFunction) => {
@@ -21,10 +21,9 @@ export class AuthController {
       password: req.body.password,
     };
     try {
-      const user = await this.authService.SignUp(signUpData);
-      res.json({
-        message: 'Account created successfully',
-        body: { user },
+      await this.authService.SignUp(signUpData);
+      res.status(200).json({
+        msg: 'Account created successfully. Please Check your inbox',
       });
     } catch (error) {
       next(error);
@@ -32,7 +31,7 @@ export class AuthController {
   };
 
   getLogIn = (req: Req, res: Res) => {
-    res.json({ message: 'You are logging in' });
+    res.json({ msg: 'You are logging in' });
   };
 
   postLogIn = async (req: Req, res: Res, next: NextFunction) => {
@@ -41,16 +40,16 @@ export class AuthController {
       password: req.body.password,
     };
     try {
-      const { _id, token } = await this.authService.LogIn(logInData);
-      res.cookie('token', token, {
+      const authDTO = await this.authService.LogIn(logInData);
+      res.cookie('token', authDTO.token, {
         maxAge: 86_400_000,
         sameSite: 'lax',
         domain: HOST.replace(/^https?:\/\//, ''),
         httpOnly: true,
       });
-      res.json({
-        message: 'Logged successfully',
-        body: { _id, token },
+      res.status(200).json({
+        msg: 'Logged successfully',
+        body: authDTO,
       });
     } catch (error) {
       next(error);
@@ -58,7 +57,15 @@ export class AuthController {
   };
 
   getLogOut = (req: Req, res: Res) => {
-    res.json({ message: 'You are going away :( ' });
+    res.cookie('token', '', {
+      maxAge: -1,
+      sameSite: 'lax',
+      domain: HOST.replace(/^https?:\/\//, ''),
+      httpOnly: true,
+    });
+    res
+      .status(200)
+      .json({ msg: "Oh farewell... Hope it won't last long" });
   };
 
   postLogOut = (req: Req, res: Res) => {
@@ -68,7 +75,9 @@ export class AuthController {
       domain: HOST.replace(/^https?:\/\//, ''),
       httpOnly: true,
     });
-    res.json({ message: "Oh farewell... Hope it won't last long" });
+    res
+      .status(200)
+      .json({ msg: "Oh farewell... Hope it won't last long" });
   };
 
   getActivate = async (req: Req, res: Res, next: NextFunction) => {
@@ -79,8 +88,28 @@ export class AuthController {
 
       await this.authService.Activate(token);
 
-      res.json({
-        message: 'User account activated. Please proceed to login',
+      res.status(200).json({
+        msg: 'User account activated. Please proceed to login',
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getToken = async (req: Req, res: Res, next: NextFunction) => {
+    const token = req.cookies.token;
+    try {
+      if (!token) throw new Error('Token was not provided');
+      const authDTO = await this.authService.Update(token);
+      res.cookie('token', authDTO.token, {
+        maxAge: 86_400_000,
+        sameSite: 'lax',
+        domain: HOST.replace(/^https?:\/\//, ''),
+        httpOnly: true,
+      });
+      res.status(200).json({
+        msg: 'Token refreshed successfully',
+        body: authDTO,
       });
     } catch (error) {
       next(error);

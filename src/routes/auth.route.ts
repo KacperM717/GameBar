@@ -25,4 +25,6 @@ export function AuthRoute(app: Application) {
   // Log Out Route
   app.get('/auth/logout', controller.getLogOut);
   app.post('/auth/logout', controller.postLogOut);
+
+  app.get('/auth/token', controller.getToken);
 }

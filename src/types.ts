@@ -82,13 +82,15 @@ export type TokenDTO = {
   _id: string;
   token: string;
 };
+export type AuthDTO = UserDTO & TokenDTO;
 
 // Services
 export interface IAuthService {
   SignUp: (data: IUserSignUp) => Promise<UserDTO>;
-  LogIn: (data: IUserLogIn) => Promise<TokenDTO>;
+  LogIn: (data: IUserLogIn) => Promise<AuthDTO>;
   LogOut: () => void;
   Activate: (token: string) => void;
+  Update: (token: string) => Promise<AuthDTO>;
 }
 
 export interface IFriendService {

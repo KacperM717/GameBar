@@ -46,13 +46,13 @@ app.get('/users', async (req: Req, res: Res, next: NextFunction) => {
     name: { $regex: new RegExp(`.*${name.toLowerCase()}.*`, 'i') },
   }).select('_id name');
   res.json({
-    message: `Found ${matchedUsers.length} users`,
+    msg: `Found ${matchedUsers.length} users`,
     body: { users: matchedUsers },
   });
 });
 
 app.use((_err: Error, req: Req, res: Res, next: NextFunction) => {
-  return res.status(500).json({ error: _err.toString() });
+  return res.status(500).json([{ msg: _err.toString() }]);
 });
 
 export default app;

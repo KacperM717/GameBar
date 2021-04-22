@@ -2,7 +2,7 @@ import User from '../db/models/user.model';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { HOST, JWT_SECRET, PORT, SALT } from '../config';
-import { IAuthService } from '../types';
+import { AuthDTO, IAuthService, UserDTO } from '../types';
 import emailer from './mail.service';
 import { FriendService } from './friend.service';
 
@@ -38,16 +38,12 @@ export const AuthService: IAuthService = {
     });
 
     if (!user) {
-      throw new Error('DB failed creating user');
+      throw new Error('DB failed creating user. Please try again');
     }
 
     await FriendService.createFriendList(user);
 
-    return {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-    };
+    return user as UserDTO;
   },
 
   LogIn: async ({ email, password }) => {
@@ -62,10 +58,12 @@ export const AuthService: IAuthService = {
 
     return {
       _id: user._id,
+      email: user.email,
+      name: user.name,
       token: jwt.sign({ email, _id: user._id }, JWT_SECRET, {
-        expiresIn: '7d', // A Week
+        expiresIn: '1d', // A Day
       }),
-    };
+    } as AuthDTO;
   },
 
   Activate: async (token) => {
@@ -80,6 +78,22 @@ export const AuthService: IAuthService = {
     await user.save();
   },
 
+  Update: async (token) => {
+    const { _id } = jwt.verify(token, JWT_SECRET) as {
+      email: string;
+      _id: string;
+    };
+    const user = await User.findById(_id);
+    if (!user) throw new Error('User not found');
+    return {
+      _id: user._id,
+      email: user.email,
+      name: user.name,
+      token: jwt.sign({ email: user.email, _id }, JWT_SECRET, {
+        expiresIn: '1d',
+      }),
+    } as AuthDTO;
+  },
   LogOut: async () => {
     throw new Error('Not implemented... But should even be?');
   },
