@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env' });
 
-const production = process.env.ENV_MODE === 'prod';
+export const production = process.env.ENV_MODE === 'prod';
 
 export const PORT = production ? Number(process.env.PORT) : 5000;
 export const HOST = production

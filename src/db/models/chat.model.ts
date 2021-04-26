@@ -6,6 +6,7 @@ export const ChatSchema = new mongoose.Schema({
   name: String,
   members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   messages: [MessageSchema],
+  closed: { type: Boolean, default: false },
 });
 
 const Chat = mongoose.model<IChat & mongoose.Document>(

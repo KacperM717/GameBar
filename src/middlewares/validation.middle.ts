@@ -3,10 +3,11 @@ import { Req, Res } from '../types';
 import { NextFunction } from 'express';
 
 const validate = (req: Req, res: Res, next: NextFunction) => {
-  const errors = validationResult(req)
+  const validRes = validationResult(req)
     .array()
     .map(({ msg, param, location }) => ({ msg, param, location }));
-  if (errors.length > 0) return res.status(400).json(errors);
+  if (validRes.length > 0)
+    return res.status(500).json({ errors: validRes });
   next();
 };
 

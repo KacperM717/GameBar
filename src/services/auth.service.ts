@@ -41,7 +41,16 @@ export const AuthService: IAuthService = {
       throw new Error('DB failed creating user. Please try again');
     }
 
-    await FriendService.createFriendList(user);
+    const friendlist = await FriendService.createFriendList(user);
+
+    if (!friendlist) {
+      await user.delete();
+      throw new Error('DB failed creating user. Please try again');
+    }
+
+    friendlist.updateOne({
+      $push: { friends: { id: user._id, role: 'friend' } },
+    });
 
     return user as UserDTO;
   },

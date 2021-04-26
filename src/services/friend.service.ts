@@ -1,10 +1,12 @@
+import User from '../db/models/user.model';
 import Friends from '../db/models/friends.model';
-import { IFriendService, UserDoc, FriendsDoc } from '../types';
-
-const throwSameUser = (userId: string, targetId: string) => {
-  if (userId === targetId)
-    throw new Error('You are already your best friend');
-};
+import {
+  Friend,
+  FriendDTO,
+  IFriendService,
+  UserDoc,
+  UserDTO,
+} from '../types';
 
 export const FriendService: IFriendService = {
   SendRequest: async (userId: string, targetId: string) => {
@@ -13,69 +15,55 @@ export const FriendService: IFriendService = {
       userId: targetId,
     });
     if (!targetFriendList) throw new Error('User not found');
-    const userBlockedByTarget = targetFriendList.blocked.some(
-      (id) => id === userId,
-    );
-    if (userBlockedByTarget)
-      throw new Error('You are blocked by this user');
-
-    await targetFriendList.updateOne({
-      $addToSet: { pending: userId },
-    });
+    const friendDoc = targetFriendList.friends.filter(
+      ({ id }) => id.toString() === userId,
+    )[0];
+    if (friendDoc) {
+      const { role } = friendDoc;
+      if (role === 'blocked')
+        throw new Error(`You are blocked by this user`);
+      if (role === 'friend')
+        throw new Error(`You are already friends with user`);
+    }
+    await updateFriend(targetId, userId, 'pending');
+    const { _id, name } = (await User.findById(userId).select({
+      _id: true,
+      name: true,
+    })) as UserDTO;
+    return { _id, name, role: 'pending' };
   },
   AcceptRequest: async (userId: string, targetId: string) => {
     throwSameUser(userId, targetId);
 
-    await Friends.updateOne(
-      { userId },
-      {
-        $addToSet: { friends: targetId },
-        $pull: { pending: targetId },
-      },
-    );
-    await Friends.updateOne(
-      { targetId },
-      {
-        $addToSet: { friends: userId },
-        $pull: { pending: userId },
-      },
-    );
+    await updateFriend(userId, targetId, 'friend');
+    await updateFriend(targetId, userId, 'friend');
+
+    const users = await User.find({
+      _id: { $in: [userId, targetId] },
+    }).select({ _id: true, name: true });
+    return users.map(({ _id, name }) => ({
+      _id,
+      name,
+      role: 'friend',
+    }));
   },
   Block: async (userId: string, targetId: string) => {
     throwSameUser(userId, targetId);
-    await Friends.updateOne(
-      { userId },
-      {
-        $pull: { pending: targetId, friends: targetId },
-        $addToSet: { blocked: targetId },
-      },
-    );
-    await Friends.updateOne(
-      { userId: targetId },
-      { $pull: { pending: userId, friends: userId } },
-    );
+    await updateFriend(userId, targetId, 'blocked');
+    await deleteNonBlockedFriend(targetId, userId);
+    const { _id, name } = (await User.findById(targetId).select({
+      _id: true,
+      name: true,
+    })) as UserDTO;
+    return { _id, name, role: 'blocked' };
   },
   RemoveFriend: async (userId: string, targetId: string) => {
     throwSameUser(userId, targetId);
     await Friends.updateOne(
       { userId },
-      {
-        $pull: {
-          pending: targetId,
-          friends: targetId,
-          blocked: targetId,
-        },
-      },
+      { $pull: { friends: { id: targetId } } },
     );
-    await Friends.updateOne(
-      { userId: targetId },
-      {
-        $pull: {
-          pending: userId,
-          friends: userId,
-        },
-      },
-    );
+    await deleteNonBlockedFriend(targetId, userId);
   },
   createFriendList: async (user: UserDoc) => {
     return await Friends.create({
@@ -83,6 +71,62 @@ export const FriendService: IFriendService = {
     });
   },
   getFriendList: async (userId: string) => {
-    return (await Friends.findOne({ userId })) as FriendsDoc;
+    const friendsDoc = await Friends.findOne({ userId });
+    if (!friendsDoc) throw new Error('Friend list not found');
+    return await friendsWithName(friendsDoc.friends);
   },
 };
+
+function throwSameUser(userId: string, targetId: string) {
+  if (userId === targetId)
+    throw new Error('You are already your best friend');
+}
+
+async function updateFriend(
+  userId: string,
+  targetId: string,
+  role: string,
+) {
+  const friendlist = await Friends.findOne({ userId });
+  if (!friendlist) throw new Error('User friendlist does not exist');
+  const newFriends = [
+    ...friendlist.friends.filter((f) => f.id.toString() !== targetId),
+    { id: targetId, role } as Friend,
+  ];
+  await friendlist.updateOne(
+    {
+      friends: newFriends,
+    },
+    { upsert: true },
+  );
+}
+
+async function deleteNonBlockedFriend(
+  userId: string,
+  targetId: string,
+) {
+  return await Friends.updateOne(
+    {
+      userId,
+      friends: {
+        $elemMatch: { id: targetId, role: { $ne: 'blocked' } },
+      },
+    },
+    { $pull: { friends: { id: targetId } } },
+  );
+}
+
+async function friendsWithName(
+  friends: Friend[],
+): Promise<FriendDTO[]> {
+  const ids = friends.map(({ id }) => id);
+  const foundUsers = await User.find({
+    _id: { $in: ids },
+  }).select({ name: true, _id: true });
+
+  return friends.map(({ id, role }) => ({
+    _id: id,
+    role,
+    name: foundUsers.find((u) => u._id.equals(id))!.name,
+  }));
+}
