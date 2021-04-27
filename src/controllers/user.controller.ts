@@ -25,4 +25,22 @@ export class UserController implements IUserController {
       next(error);
     }
   };
+
+  postAllWithIds = async (req: Req, res: Res, next: NextFunction) => {
+    const ids = req.body.ids;
+
+    try {
+      if (!ids || ids.length === 0)
+        throw new Error('Ids not provided');
+
+      const users = await this.userService.findAllWithIds(ids);
+
+      res.json({
+        msg: `Returning ${users.length} users`,
+        body: users,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

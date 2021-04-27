@@ -11,4 +11,11 @@ export const UserService: IUserService = {
 
     return users;
   },
+  findAllWithIds: async (ids: string[]) => {
+    return await User.find({ _id: { $in: ids } }).select({
+      _id: true,
+      name: true,
+      email: true,
+    });
+  },
 };

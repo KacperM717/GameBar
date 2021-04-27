@@ -7,4 +7,5 @@ export function UserRoute(app: Application) {
   const controller = new UserController(UserService);
 
   app.get('/users/', sanitizeQuery(), controller.getAllByName);
+  app.post('/user/withIds', controller.postAllWithIds);
 }

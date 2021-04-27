@@ -1,5 +1,5 @@
 import Chat from '../db/models/chat.model';
-import { IChatService } from '../types';
+import { IChatService, ChatDTO } from '../types';
 
 export const ChatService: IChatService = {
   createChat: async (
@@ -20,16 +20,35 @@ export const ChatService: IChatService = {
     return chat;
   },
   getUserChats: async (userId: string) => {
-    return await Chat.find({ $in: { members: userId } });
+    const chats = (await Chat.find({
+      members: userId,
+    }).populate({
+      path: 'members',
+      select: '_id name',
+    })) as ChatDTO[];
+    return chats;
   },
   addUserToChat: async (chatId: string, userId: string) => {
-    return await Chat.findByIdAndUpdate(chatId, {
-      $addToSet: { members: userId },
-    });
+    return await Chat.findByIdAndUpdate(
+      chatId,
+      {
+        $addToSet: { members: userId },
+      },
+      { new: true },
+    );
   },
   leaveChat: async (chatId: string, userId: string) => {
     return await Chat.findByIdAndUpdate(chatId, {
       $pull: { members: userId },
     });
+  },
+  getChat: async (chatId: string) => {
+    return (await Chat.findById(chatId).populate({
+      path: 'members',
+      select: '_id name',
+    })) as ChatDTO;
+  },
+  deleteChat: async (chatId: string) => {
+    return await Chat.findByIdAndDelete(chatId);
   },
 };

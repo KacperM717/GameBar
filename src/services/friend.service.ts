@@ -1,12 +1,6 @@
 import User from '../db/models/user.model';
 import Friends from '../db/models/friends.model';
-import {
-  Friend,
-  FriendDTO,
-  IFriendService,
-  UserDoc,
-  UserDTO,
-} from '../types';
+import { Friend, IFriendService, UserDoc, UserDTO } from '../types';
 
 export const FriendService: IFriendService = {
   SendRequest: async (userId: string, targetId: string) => {
@@ -71,9 +65,17 @@ export const FriendService: IFriendService = {
     });
   },
   getFriendList: async (userId: string) => {
-    const friendsDoc = await Friends.findOne({ userId });
+    const friendsDoc = await Friends.findOne({ userId }).populate(
+      'friends.id',
+      '_id name',
+    );
     if (!friendsDoc) throw new Error('Friend list not found');
-    return await friendsWithName(friendsDoc.friends);
+    const friends = friendsDoc.friends.map((friend) => ({
+      role: friend.role,
+      _id: friend.id._id,
+      name: friend.id.name,
+    }));
+    return friends;
   },
 };
 
@@ -116,17 +118,17 @@ async function deleteNonBlockedFriend(
   );
 }
 
-async function friendsWithName(
-  friends: Friend[],
-): Promise<FriendDTO[]> {
-  const ids = friends.map(({ id }) => id);
-  const foundUsers = await User.find({
-    _id: { $in: ids },
-  }).select({ name: true, _id: true });
+// async function friendsWithName(
+//   friends: Friend[],
+// ): Promise<FriendDTO[]> {
+//   const ids = friends.map(({ id }) => id);
+//   const foundUsers = await User.find({
+//     _id: { $in: ids },
+//   }).select({ name: true, _id: true });
 
-  return friends.map(({ id, role }) => ({
-    _id: id,
-    role,
-    name: foundUsers.find((u) => u._id.equals(id))!.name,
-  }));
-}
+//   return friends.map(({ id, role }) => ({
+//     _id: id,
+//     role,
+//     name: foundUsers.find((u) => u._id.equals(id))!.name,
+//   }));
+// }

@@ -78,7 +78,8 @@ export interface IUserLogIn {
 }
 
 // DTOs
-export type UserDTO = Pick<UserDoc, '_id' | 'email' | 'name'>;
+export type MessageDTO = Partial<MessageDoc>;
+export type UserDTO = Pick<UserDoc, '_id' | 'name'>;
 export type TokenDTO = {
   _id: string;
   token: string;
@@ -88,6 +89,13 @@ export type FriendDTO = {
   _id: string;
   name: string;
   role: FriendRoles;
+};
+export type ChatDTO = {
+  _id: string;
+  members: UserDTO[];
+  messages: MessageDTO[];
+  name: string;
+  closed: boolean;
 };
 
 // Services
@@ -116,6 +124,7 @@ export interface IFriendService {
 
 export interface IUserService {
   findAllByName: (name: string) => Promise<UserDTO[]>;
+  findAllWithIds: (ids: string[]) => Promise<UserDTO[]>;
 }
 
 export interface IChatService {
@@ -124,9 +133,11 @@ export interface IChatService {
     name: string,
     closed: boolean,
   ) => Promise<ChatDoc>;
-  getUserChats: (userId: string) => Promise<ChatDoc[]>;
+  deleteChat: (chatId: string) => void;
+  getUserChats: (userId: string) => Promise<ChatDTO[]>;
   addUserToChat: (chatId: string, userId: string) => void;
   leaveChat: (chatId: string, userId: string) => void;
+  getChat: (chatId: string) => Promise<ChatDTO>;
 }
 
 // Controllers
@@ -142,14 +153,16 @@ export interface IFriendController {
 export interface IUserController {
   userService: IUserService;
   getAllByName: any;
+  postAllWithIds: any;
 }
 
 // Socket Types
 export type SocketData = {
+  name: string;
   token: string;
   _id: string;
-  chats: string[];
-  friends: string[];
+  chats: ChatDTO[];
+  friends: FriendDTO[];
 };
 
 export interface UserSocket extends Socket {
