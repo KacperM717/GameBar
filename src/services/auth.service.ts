@@ -1,7 +1,7 @@
 import User from '../db/models/user.model';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { HOST, JWT_SECRET, PORT, SALT } from '../config';
+import { AVATAR_HOST, HOST, JWT_SECRET, PORT, SALT } from '../config';
 import { AuthDTO, IAuthService, UserDTO } from '../types';
 import emailer from './mail.service';
 import { FriendService } from './friend.service';
@@ -35,6 +35,7 @@ export const AuthService: IAuthService = {
       name,
       email,
       password: hashedPassword,
+      avatar: `${AVATAR_HOST}/${name}`,
     });
 
     if (!user) {
@@ -67,11 +68,11 @@ export const AuthService: IAuthService = {
 
     return {
       _id: user._id,
-      email: user.email,
       name: user.name,
       token: jwt.sign({ email, _id: user._id }, JWT_SECRET, {
         expiresIn: '1d', // A Day
       }),
+      avatar: user.avatar,
     } as AuthDTO;
   },
 
@@ -96,11 +97,11 @@ export const AuthService: IAuthService = {
     if (!user) throw new Error('User not found');
     return {
       _id: user._id,
-      email: user.email,
       name: user.name,
       token: jwt.sign({ email: user.email, _id }, JWT_SECRET, {
         expiresIn: '1d',
       }),
+      avatar: user.avatar,
     } as AuthDTO;
   },
   LogOut: async () => {

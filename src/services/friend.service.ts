@@ -20,11 +20,14 @@ export const FriendService: IFriendService = {
         throw new Error(`You are already friends with user`);
     }
     await updateFriend(targetId, userId, 'pending');
-    const { _id, name } = (await User.findById(userId).select({
-      _id: true,
-      name: true,
-    })) as UserDTO;
-    return { _id, name, role: 'pending' };
+    const { _id, name, avatar } = (await User.findById(userId).select(
+      {
+        _id: true,
+        name: true,
+        avatar: true,
+      },
+    )) as UserDTO;
+    return { _id, name, avatar, role: 'pending' };
   },
   AcceptRequest: async (userId: string, targetId: string) => {
     throwSameUser(userId, targetId);
@@ -35,9 +38,10 @@ export const FriendService: IFriendService = {
     const users = await User.find({
       _id: { $in: [userId, targetId] },
     }).select({ _id: true, name: true });
-    return users.map(({ _id, name }) => ({
+    return users.map(({ _id, name, avatar }) => ({
       _id,
       name,
+      avatar,
       role: 'friend',
     }));
   },
@@ -45,11 +49,14 @@ export const FriendService: IFriendService = {
     throwSameUser(userId, targetId);
     await updateFriend(userId, targetId, 'blocked');
     await deleteNonBlockedFriend(targetId, userId);
-    const { _id, name } = (await User.findById(targetId).select({
+    const { _id, name, avatar } = (await User.findById(
+      targetId,
+    ).select({
       _id: true,
       name: true,
+      avatar: true,
     })) as UserDTO;
-    return { _id, name, role: 'blocked' };
+    return { _id, name, avatar, role: 'blocked' };
   },
   RemoveFriend: async (userId: string, targetId: string) => {
     throwSameUser(userId, targetId);
@@ -67,13 +74,14 @@ export const FriendService: IFriendService = {
   getFriendList: async (userId: string) => {
     const friendsDoc = await Friends.findOne({ userId }).populate(
       'friends.id',
-      '_id name',
+      '_id name avatar',
     );
     if (!friendsDoc) throw new Error('Friend list not found');
     const friends = friendsDoc.friends.map((friend) => ({
       role: friend.role,
       _id: friend.id._id,
       name: friend.id.name,
+      avatar: friend.id.avatar,
     }));
     return friends;
   },

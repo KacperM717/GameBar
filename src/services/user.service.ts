@@ -7,7 +7,7 @@ export const UserService: IUserService = {
       name: {
         $regex: new RegExp(`.*${name}.*`, 'i'),
       },
-    }).select('_id name email');
+    }).select('_id name avatar');
 
     return users;
   },
@@ -15,7 +15,7 @@ export const UserService: IUserService = {
     return await User.find({ _id: { $in: ids } }).select({
       _id: true,
       name: true,
-      email: true,
+      avatar: true,
     });
   },
 };

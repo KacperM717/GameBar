@@ -23,6 +23,7 @@ export interface IUser extends ITimestamp {
   password: string;
   role: string;
   active: boolean;
+  avatar: string;
 }
 
 export interface UserDoc extends IUser, mongoose.Document {}
@@ -79,15 +80,13 @@ export interface IUserLogIn {
 
 // DTOs
 export type MessageDTO = Partial<MessageDoc>;
-export type UserDTO = Pick<UserDoc, '_id' | 'name'>;
+export type UserDTO = Pick<UserDoc, '_id' | 'name' | 'avatar'>;
 export type TokenDTO = {
   _id: string;
   token: string;
 };
 export type AuthDTO = UserDTO & TokenDTO;
-export type FriendDTO = {
-  _id: string;
-  name: string;
+export type FriendDTO = UserDTO & {
   role: FriendRoles;
 };
 export type ChatDTO = {
@@ -132,7 +131,7 @@ export interface IChatService {
     members: string[],
     name: string,
     closed: boolean,
-  ) => Promise<ChatDoc>;
+  ) => Promise<ChatDTO>;
   deleteChat: (chatId: string) => void;
   getUserChats: (userId: string) => Promise<ChatDTO[]>;
   addUserToChat: (chatId: string, userId: string) => void;

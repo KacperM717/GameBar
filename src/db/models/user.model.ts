@@ -22,6 +22,9 @@ export const UserSchema = new mongoose.Schema(
       default: false,
       required: [true, 'Active is required'],
     },
+    avatar: {
+      type: String,
+    },
   },
   { timestamps: true },
 );

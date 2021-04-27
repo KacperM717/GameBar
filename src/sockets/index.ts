@@ -7,17 +7,18 @@ import {
   UserSocket,
   WSRes,
 } from '../types';
-import { JWT_SECRET } from '../config';
+import { CLIENT_HOST, JWT_SECRET } from '../config';
 import jwt from 'jsonwebtoken';
 import { globalEmitter } from '../events';
 import Chat from '../db/models/chat.model';
 import Message from '../db/models/message.model';
+import mongoose from 'mongoose';
 
 export const initSocketIO = (httpServer: http.Server) => {
   const io = new Server(httpServer, {
     serveClient: false,
     cors: {
-      origin: ['http://localhost:3000'],
+      origin: [CLIENT_HOST],
       methods: ['GET', 'POST'],
       allowedHeaders: '*',
       credentials: true,
@@ -144,7 +145,6 @@ export const initSocketIO = (httpServer: http.Server) => {
 
     // Chats Events
     socket.on('chat:init', (chats: ChatDTO[]) => {
-      console.log('chatinit', chats);
       socket.user!.chats = chats;
       if (chats.length > 0)
         socket.join(socket.user!.chats.map((chat) => chat._id));
@@ -159,26 +159,26 @@ export const initSocketIO = (httpServer: http.Server) => {
       socket.join(chatId);
     });
     socket.on('chat:send', async ({ chatId, msg }) => {
-      console.log('sent', chatId, msg);
       try {
         const message = await Message.create({
           text: msg.toString(),
-          author: socket.user!._id,
+          author: mongoose.Types.ObjectId(socket.user!._id),
         });
         await Chat.findByIdAndUpdate(chatId, {
           $push: { messages: message },
         });
-        const savedMsg = await message.populate({
-          path: 'author',
-          select: '_id name',
-        });
-        console.log(savedMsg);
+        const populatedMessage = await message
+          .populate({
+            path: 'author',
+            select: '_id name',
+          })
+          .execPopulate();
         io.to(chatId).emit('chat:receive', {
           chatId,
-          msg: savedMsg,
+          message: populatedMessage,
         });
       } catch (error) {
-        socket.emit('chat:message_error', chatId);
+        socket.emit('chat:message_error', { chatId, error });
       }
     });
   });

@@ -1,5 +1,5 @@
 import Chat from '../db/models/chat.model';
-import { IChatService, ChatDTO } from '../types';
+import { IChatService, ChatDTO, ChatDoc } from '../types';
 
 export const ChatService: IChatService = {
   createChat: async (
@@ -7,26 +7,24 @@ export const ChatService: IChatService = {
     name: string,
     closed: boolean,
   ) => {
-    if (members.length > 2)
-      throw new Error(
-        'To create a chat you need at least two participants',
-      );
     const chat = await Chat.create({
       name: name || `Chat #${Math.floor(Math.random() * 1000)}`,
       members,
       closed,
     });
 
-    return chat;
+    return (await populateChat(chat)) as ChatDTO;
   },
   getUserChats: async (userId: string) => {
-    const chats = (await Chat.find({
+    const chats = await Chat.find({
       members: userId,
-    }).populate({
-      path: 'members',
-      select: '_id name',
-    })) as ChatDTO[];
-    return chats;
+    });
+    const populatedChats = [];
+    for await (const chat of chats) {
+      const populatedChat = await populateChat(chat);
+      populatedChats.push(populatedChat);
+    }
+    return populatedChats as ChatDTO[];
   },
   addUserToChat: async (chatId: string, userId: string) => {
     return await Chat.findByIdAndUpdate(
@@ -43,12 +41,22 @@ export const ChatService: IChatService = {
     });
   },
   getChat: async (chatId: string) => {
-    return (await Chat.findById(chatId).populate({
-      path: 'members',
-      select: '_id name',
-    })) as ChatDTO;
+    const chat = (await Chat.findById(chatId)) as ChatDoc;
+    return (await populateChat(chat)) as ChatDTO;
   },
   deleteChat: async (chatId: string) => {
     return await Chat.findByIdAndDelete(chatId);
   },
 };
+
+function populateChat(chat: ChatDoc) {
+  return chat
+    .populate({
+      path: 'members',
+      select: '_id name',
+    })
+    .populate({
+      path: 'messages.author',
+    })
+    .execPopulate();
+}

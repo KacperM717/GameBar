@@ -9,6 +9,12 @@ export const HOST = production
   ? (process.env.HOST as string)
   : 'http://localhost';
 
+export const CLIENT_HOST = production
+  ? (process.env.CLIENT_HOST as string)
+  : 'http://localhost:3000';
+
+export const AVATAR_HOST = process.env.AVATAR_HOST as string;
+
 export const DB_URI = ((production
   ? process.env.DB_PROD_URI
   : process.env.DB_URI) ?? '') as string;

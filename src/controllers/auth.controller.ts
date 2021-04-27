@@ -1,7 +1,7 @@
 import { IAuthService, Req, Res } from '../types';
 import { AuthService } from '../services/auth.service';
 import { NextFunction } from 'express';
-import { HOST } from '../config';
+import { CLIENT_HOST, HOST } from '../config';
 
 export class AuthController {
   authService: IAuthService;
@@ -88,9 +88,7 @@ export class AuthController {
 
       await this.authService.Activate(token);
 
-      res.status(200).json({
-        msg: 'User account activated. Please proceed to login',
-      });
+      res.redirect(CLIENT_HOST);
     } catch (error) {
       next(error);
     }
