@@ -12,8 +12,8 @@ export const ChatService: IChatService = {
       members,
       closed,
     });
-
-    return (await populateChat(chat)) as ChatDTO;
+    const populated = await populateChat(chat);
+    return populated as ChatDTO;
   },
   getUserChats: async (userId: string) => {
     const chats = await Chat.find({
@@ -27,13 +27,14 @@ export const ChatService: IChatService = {
     return populatedChats as ChatDTO[];
   },
   addUserToChat: async (chatId: string, userId: string) => {
-    return await Chat.findByIdAndUpdate(
-      chatId,
-      {
-        $addToSet: { members: userId },
-      },
+    const chat = await Chat.findById(chatId);
+    if (chat?.closed === true)
+      throw new Error('Cannot add user to locked chat.');
+    const updatedChat = await chat?.updateOne(
+      { $addToSet: { members: userId } },
       { new: true },
     );
+    return updatedChat;
   },
   leaveChat: async (chatId: string, userId: string) => {
     return await Chat.findByIdAndUpdate(chatId, {
@@ -53,10 +54,11 @@ function populateChat(chat: ChatDoc) {
   return chat
     .populate({
       path: 'members',
-      select: '_id name',
+      select: '_id name avatar',
     })
     .populate({
       path: 'messages.author',
+      select: '_id name avatar',
     })
     .execPopulate();
 }

@@ -43,7 +43,7 @@ export class ChatController {
     }
   };
 
-  getAddUser = async (req: Req, res: Res, next: NextFunction) => {
+  postAddUser = async (req: Req, res: Res, next: NextFunction) => {
     const chatId = req.body.chatId;
     const userId = req.body.userId;
 
@@ -59,7 +59,7 @@ export class ChatController {
     }
   };
 
-  getLeaveChat = async (req: Req, res: Res, next: NextFunction) => {
+  postLeaveChat = async (req: Req, res: Res, next: NextFunction) => {
     const chatId = req.body.chatId;
     const userId = req.body.userId;
 
@@ -76,11 +76,13 @@ export class ChatController {
 
   getChat = async (req: Req, res: Res, next: NextFunction) => {
     const chatId = req.params.id;
+    console.log(req.params);
 
     try {
       if (!chatId) throw new Error('Chat was not specified');
 
-      await this.chatService.getChat(chatId);
+      const chat = await this.chatService.getChat(chatId);
+      res.json({ msg: 'Your chat is ready', body: chat });
     } catch (error) {
       next(error);
     }

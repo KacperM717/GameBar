@@ -45,12 +45,13 @@ export const initSocketIO = (httpServer: http.Server) => {
 
   // Chat HTTP Listeners
   globalEmitter.on('CHAT_CREATED', ({ chat }) => {
-    io.to(chat.members.map((m: string) => m.toString())).emit(
-      'chat:add',
-      chat._id,
+    const mappedMems = chat.members.map(({ _id }: { _id: any }) =>
+      _id.toString(),
     );
+    io.to(mappedMems).emit('chat:add', chat._id);
   });
   globalEmitter.on('CHAT_USER_ADDED', ({ chatId, userId }) => {
+    console.log('CHATID', chatId, 'USERID', userId);
     io.to(userId).emit('chat:add', chatId);
   });
   globalEmitter.on('CHAT_USER_LEFT', ({ chatId, userId }) => {
@@ -170,7 +171,7 @@ export const initSocketIO = (httpServer: http.Server) => {
         const populatedMessage = await message
           .populate({
             path: 'author',
-            select: '_id name',
+            select: '_id name avatar',
           })
           .execPopulate();
         io.to(chatId).emit('chat:receive', {
@@ -179,6 +180,14 @@ export const initSocketIO = (httpServer: http.Server) => {
         });
       } catch (error) {
         socket.emit('chat:message_error', { chatId, error });
+      }
+    });
+    socket.on('chat:leaving', (chatId) => {
+      socket.leave(chatId);
+      if (socket.user) {
+        socket.user.chats = socket.user.chats.filter(
+          (chat) => chat._id !== chatId,
+        );
       }
     });
   });

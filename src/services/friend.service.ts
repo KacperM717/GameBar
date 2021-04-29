@@ -37,7 +37,7 @@ export const FriendService: IFriendService = {
 
     const users = await User.find({
       _id: { $in: [userId, targetId] },
-    }).select({ _id: true, name: true });
+    }).select({ _id: true, name: true, avatar: true });
     return users.map(({ _id, name, avatar }) => ({
       _id,
       name,
