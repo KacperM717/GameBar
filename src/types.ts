@@ -157,6 +157,7 @@ export interface IUserController {
 
 // Socket Types
 export type SocketData = {
+  avatar: string;
   name: string;
   token: string;
   _id: string;

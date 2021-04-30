@@ -50,9 +50,9 @@ export const initSocketIO = (httpServer: http.Server) => {
     );
     io.to(mappedMems).emit('chat:add', chat._id);
   });
-  globalEmitter.on('CHAT_USER_ADDED', ({ chatId, userId }) => {
-    console.log('CHATID', chatId, 'USERID', userId);
-    io.to(userId).emit('chat:add', chatId);
+  globalEmitter.on('CHAT_USER_ADDED', ({ chat, userId }) => {
+    console.log('CHATID', chat._id, 'USERID', userId);
+    io.to(userId).emit('chat:add', chat._id);
   });
   globalEmitter.on('CHAT_USER_LEFT', ({ chatId, userId }) => {
     io.to(chatId).emit('chat:user_left', { chatId, userId });
@@ -66,6 +66,7 @@ export const initSocketIO = (httpServer: http.Server) => {
   io.on('connection', (socket: UserSocket) => {
     socket.user = {
       name: '',
+      avatar: '',
       _id: '',
       token: '',
       friends: [],
@@ -75,7 +76,12 @@ export const initSocketIO = (httpServer: http.Server) => {
     socket.on(
       'login',
       (
-        { _id, token, name }: TokenDTO & { name: string },
+        {
+          _id,
+          token,
+          name,
+          avatar,
+        }: TokenDTO & { name: string; avatar: string },
         res: (a: WSRes<void>) => void,
       ) => {
         if (!_id || !token)
@@ -88,6 +94,7 @@ export const initSocketIO = (httpServer: http.Server) => {
           return res({ ok: false, msg: 'Credentials do not match' });
         // Pass to user object
         socket.user!.name = name;
+        socket.user!.avatar = avatar;
         socket.user!._id = _id;
         socket.user!.token = token;
         socket.join(socket.user!._id);
@@ -155,7 +162,11 @@ export const initSocketIO = (httpServer: http.Server) => {
       socket.user!.chats.push(chat);
       socket.to(chatId).emit('chat:user_joined', {
         chatId,
-        user: { _id: socket.user!._id, name: socket.user!.name },
+        user: {
+          _id: socket.user!._id,
+          name: socket.user!.name,
+          avatar: socket.user!.avatar,
+        },
       });
       socket.join(chatId);
     });
@@ -189,6 +200,19 @@ export const initSocketIO = (httpServer: http.Server) => {
           (chat) => chat._id !== chatId,
         );
       }
+    });
+    // Event emitted when user wants to call others
+    socket.on('video:call', (friendId) => {
+      // Call user
+      console.log(`${socket.user?._id} is calling ${friendId}`);
+      socket.to(friendId).emit('video:calling', socket.user?._id);
+    });
+    // Event emitted when user rejects calling
+    socket.on('video:reject', (friendId) => {
+      socket.to(friendId).emit('video:rejected', socket.user?._id);
+    });
+    socket.on('video:accept', (friendId, peerId) => {
+      socket.to(friendId).emit('video:accepted', peerId);
     });
   });
   return io;

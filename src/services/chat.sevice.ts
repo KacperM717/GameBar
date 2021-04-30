@@ -27,14 +27,14 @@ export const ChatService: IChatService = {
     return populatedChats as ChatDTO[];
   },
   addUserToChat: async (chatId: string, userId: string) => {
-    const chat = await Chat.findById(chatId);
-    if (chat?.closed === true)
-      throw new Error('Cannot add user to locked chat.');
-    const updatedChat = await chat?.updateOne(
+    const chat = await Chat.findOneAndUpdate(
+      { _id: chatId, closed: false },
       { $addToSet: { members: userId } },
       { new: true },
     );
-    return updatedChat;
+    if (!chat) throw new Error('Cannot add user to this chat.');
+    const popChat = await populateChat(chat);
+    return popChat;
   },
   leaveChat: async (chatId: string, userId: string) => {
     return await Chat.findByIdAndUpdate(chatId, {

@@ -51,8 +51,11 @@ export class ChatController {
       if (!chatId) throw new Error('Chat was not specified');
       if (!userId) throw new Error('User was not specified');
 
-      await this.chatService.addUserToChat(chatId, userId);
-      globalEmitter.emit('CHAT_USER_ADDED', { chatId, userId });
+      const chat = await this.chatService.addUserToChat(
+        chatId,
+        userId,
+      );
+      globalEmitter.emit('CHAT_USER_ADDED', { chat, userId });
       res.json({ msg: 'User added to chat' });
     } catch (error) {
       next(error);
