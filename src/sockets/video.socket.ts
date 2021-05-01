@@ -11,5 +11,8 @@ export const attachVideo = (socket: UserSocket) => {
   socket.on('video:accept', (friendId, peerId) => {
     socket.to(friendId).emit('video:accepted', peerId);
   });
+  socket.on('video:cancel', (friendId) => {
+    socket.to(friendId).emit('video:cancelled', socket.user?._id);
+  });
   return socket;
 };
