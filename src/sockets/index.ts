@@ -7,6 +7,7 @@ import { attachAuth } from './auth.socket';
 import { attachChat } from './chat.socket';
 import { attachFriend } from './friend.socket';
 import { attachVideo } from './video.socket';
+import { attachGame } from './game.socket';
 
 export const initSocketIO = (httpServer: http.Server) => {
   const io = new Server(httpServer, {
@@ -62,6 +63,7 @@ export const initSocketIO = (httpServer: http.Server) => {
     attachFriend(socket, connected);
     attachChat(socket, io);
     attachVideo(socket);
+    attachGame(socket, io);
   });
   return io;
 };
