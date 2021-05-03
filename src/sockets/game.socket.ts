@@ -38,6 +38,9 @@ export const attachGame = (socket: GameSocket, io: Server) => {
       }
     }
   });
+  socket.on('game:leave', () => {
+    socket.gameRoom?.playerLeave(socket.user!._id);
+  });
   socket.on('game:ready', () => {
     socket.gameRoom?.playerReady(socket.user!._id);
   });

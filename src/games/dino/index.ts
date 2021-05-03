@@ -1,5 +1,5 @@
 import { Server } from 'socket.io';
-import { GameRoom, GameRoomType } from '../game_room';
+import { GameRoomType, IGameRoom } from '../game_room';
 import { rectRectCollision, Vec2D } from '../utils';
 import { performance } from 'perf_hooks';
 import { GameSocket } from '../';
@@ -7,7 +7,7 @@ import { DinoPlayer } from './player.dino';
 import { DinoObstacle } from './obstacle.dino';
 import { DinoWorld } from './world.dino';
 
-export class DinoGameRoom extends GameRoom implements GameRoomType {
+export class DinoGameRoom implements GameRoomType, IGameRoom {
   state: {
     world: {
       size: Vec2D;
@@ -20,8 +20,13 @@ export class DinoGameRoom extends GameRoom implements GameRoomType {
   time: number;
   obstacleTicks = 0;
   readies = new Set();
+  id: string;
+  players: GameSocket[];
+  io: any;
   constructor(id: string, players: GameSocket[], io: Server) {
-    super(id, players, io);
+    this.id = id;
+    this.players = players;
+    this.io = io;
     this.time = performance.now();
     this.state = {
       world: new DinoWorld(new Vec2D(300, 100)),
