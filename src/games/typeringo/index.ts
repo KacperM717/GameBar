@@ -1,6 +1,5 @@
 import { Server } from 'socket.io';
-import { GameSocket } from '..';
-import { IGameRoom } from '../game_room';
+import { GameSocket, IGameRoom } from '../../types';
 import { TyperingoPlayer } from './player.typeringo';
 
 export class TyperingoGameRoom implements IGameRoom {

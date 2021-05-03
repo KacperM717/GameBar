@@ -1,11 +1,10 @@
 import { Server } from 'socket.io';
-import { GameRoomType, IGameRoom } from '../game_room';
 import { rectRectCollision, Vec2D } from '../utils';
 import { performance } from 'perf_hooks';
-import { GameSocket } from '../';
 import { DinoPlayer } from './player.dino';
 import { DinoObstacle } from './obstacle.dino';
 import { DinoWorld } from './world.dino';
+import { GameRoomType, GameSocket, IGameRoom } from '../../types';
 
 export class DinoGameRoom implements GameRoomType, IGameRoom {
   state: {

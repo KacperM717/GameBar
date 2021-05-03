@@ -1,5 +1,6 @@
 import { Server } from 'socket.io';
-import { games, GameSocket } from '../games';
+import { games } from '../games';
+import { GameSocket } from '../types';
 
 let nextRoomId = 0;
 

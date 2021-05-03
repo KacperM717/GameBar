@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 
 // Express Types
 export interface Req extends Request {
@@ -186,3 +186,42 @@ export type FriendEventName =
   | 'FRIEND_BLOCKED'
   | 'FRIEND_REMOVED';
 export type GlobalEventName = ChatEventName & FriendEventName;
+
+// GameRoom
+
+export interface IGameRoom {
+  id: string;
+  players: UserSocket[];
+  state: any;
+  io: Server;
+
+  playerReady(id: string): void;
+  playerLeave(id: string): void;
+  tick(time?: number): void;
+  close(): void;
+  init(): void;
+}
+export type GameSocket = UserSocket & { gameRoom?: IGameRoom };
+
+export type UserQueueType =
+  | { state: 'looking'; socket: GameSocket }
+  | { state: 'playing'; socket: GameSocket }
+  | { state: 'passerby'; socket: GameSocket };
+export type GameRoomType = {
+  id: string;
+  players: GameSocket[];
+  state: any;
+  io: Server;
+  tick: (time: number) => void;
+  close: () => void;
+  playerReady: (id: string) => void;
+  playerLeave: (id: string) => void;
+  init: () => void;
+};
+export type Game = {
+  id: string;
+  queue: UserQueueType[];
+  rules: { playersPerRoom: number };
+  rooms: { [key: string]: GameRoomType };
+  RoomMaker: any;
+};
