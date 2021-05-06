@@ -1,3 +1,14 @@
-# final_project
+## GameBar - Backend
+###### This repository contains server application for GameBar. 
 
-Final project for my university studies
+### Stack:
+
+#### Express
+
+#### Socket.IO
+
+#### Mongoose & MongoDB Atlas
+
+#### Nodemailer
+
+#### JWT
