@@ -1,4 +1,4 @@
-## GameBar - Backend
+## GameBar - Backend [Client App Here](https://github.com/KacperM717/GameBarClient)
 ###### This repository contains server application for GameBar. 
 
 ### Stack:
